@@ -7,7 +7,28 @@ import { COMMON_ALLERGIES, COMMON_MEDICATIONS, COMMON_CONDITIONS } from './commo
 import { QRCodeCanvas } from 'qrcode.react';
 
 const NAVY = '#0a2540';
-
+function downloadBrandedQR(token: string) {
+  const src = document.getElementById('enroll-qr') as HTMLCanvasElement | null;
+  if (!src) return;
+  const pad = 40;
+  const captionH = 56;
+  const out = document.createElement('canvas');
+  out.width = src.width + pad * 2;
+  out.height = src.height + pad * 2 + captionH;
+  const ctx = out.getContext('2d');
+  if (!ctx) return;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, out.width, out.height);
+  ctx.drawImage(src, pad, pad);
+  ctx.fillStyle = NAVY;
+  ctx.font = '700 22px -apple-system, Segoe UI, Roboto, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('SCAN IN CASE OF EMERGENCY', out.width / 2, src.height + pad + 38);
+  const link = document.createElement('a');
+  link.download = `drsolv-qr-${token}.png`;
+  link.href = out.toDataURL('image/png');
+  link.click();
+}
 // Common quick-pick options (DRAFT — pending Dr. Rashi's review, like the medical lists).
 const COMMON_LANGUAGES = ['Hindi', 'English', 'Bengali', 'Marathi', 'Tamil', 'Telugu', 'Gujarati', 'Kannada', 'Malayalam', 'Punjabi', 'Odia', 'Urdu', 'Assamese'];
 const COMMON_COMPLAINTS = ['None', 'Fever', 'Cough / cold', 'Headache', 'Body ache', 'Injury / trauma', 'Abdominal pain', 'Breathing difficulty', 'Dizziness / weakness'];
