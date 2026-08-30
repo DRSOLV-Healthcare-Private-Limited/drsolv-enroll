@@ -69,8 +69,7 @@ const emptyForm: EnrollmentForm = {
     noKnownConditions: false, conditions: '',
     noKnownMedications: false, medications: '',
     surgeries: '', drugTreatment: '',
-    smoking: '', alcohol: '', diet: '', sleep: '', menstrual: '',
-    lastMenstrualPeriod: '', cycleDays: '',
+    smoking: '', alcohol: '', diet: '', sleep: '', menstrual: '', cycleDays: '',
   },
   termsAccepted: false,
 };
@@ -259,8 +258,6 @@ function EnrollForm({ stationId, token, onLogout }: { stationId: string; token: 
           <Field label="Sleep habits" span={12}><Choice value={mh.sleep} onChange={(v) => setMH('sleep', v)} options={[['adequate', 'Adequate'], ['disturbed', 'Disturbed'], ['insomnia', 'Insomnia']]} /></Field>
           {f.gender === 'female' && (
             <>
-              <Field label="Last menstrual period" span={6}><input type="date" className={inputCls} value={mh.lastMenstrualPeriod} onChange={(e) => setMH('lastMenstrualPeriod', e.target.value)} /></Field>
-              <Field label="Cycle length (days)" span={6}><input inputMode="numeric" className={inputCls} value={mh.cycleDays} onChange={(e) => setMH('cycleDays', e.target.value)} placeholder="28" /></Field>
               <Field label="Menstrual cycle" span={12}><Choice value={mh.menstrual} onChange={(v) => setMH('menstrual', v)} options={[['regular', 'Regular'], ['irregular', 'Irregular']]} /></Field>
             </>
           )}

@@ -24,7 +24,6 @@ export interface MedicalHistory {
   diet: string;                  // 'veg' | 'nonveg' | 'egg' | ''
   sleep: string;                 // 'adequate' | 'disturbed' | 'insomnia' | ''
   menstrual: string;
-  lastMenstrualPeriod: string;
   cycleDays: string;             // 'regular' | 'irregular' | '' (female only)
 }
 

@@ -67,7 +67,6 @@ export async function staffEnroll(
       diet: mh.diet,
       sleep: mh.sleep,
       menstrual: form.gender === 'female' ? mh.menstrual : '',
-      lastMenstrualPeriod: form.gender === 'female' ? mh.lastMenstrualPeriod : '',
       cycleDays: form.gender === 'female' ? mh.cycleDays : '',
     },
     ...(photoKey ? { photoKey } : {}),
