@@ -156,7 +156,7 @@ function EnrollForm({ stationId, token, onLogout }: { stationId: string; token: 
           <p className="mt-1 break-all rounded-xl bg-white/50 border border-white/60 p-3 text-xs text-slate-600">{savedId}</p>
           {savedToken && (
             <div className="mt-5 flex flex-col items-center">
-              <div className="rounded-2xl bg-white p-4 shadow border border-slate-100 text-center">
+              <div className="rounded-2xl bg-white p-4 shadow border border-slate-100 text-center flex flex-col items-center">
                 <QRCodeCanvas
                   id="enroll-qr"
                   value={`https://drsolv.in/p/${savedToken}`}
