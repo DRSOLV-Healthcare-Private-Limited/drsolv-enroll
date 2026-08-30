@@ -156,20 +156,20 @@ function EnrollForm({ stationId, token, onLogout }: { stationId: string; token: 
           <p className="mt-1 break-all rounded-xl bg-white/50 border border-white/60 p-3 text-xs text-slate-600">{savedId}</p>
           {savedToken && (
             <div className="mt-5 flex flex-col items-center">
-              <div className="rounded-2xl bg-white p-4 shadow border border-slate-100">
-                <QRCodeCanvas id="enroll-qr" value={`https://drsolv.in/p/${savedToken}`} size={180} level="M" />
+              <div className="rounded-2xl bg-white p-4 shadow border border-slate-100 text-center">
+                <QRCodeCanvas
+                  id="enroll-qr"
+                  value={`https://drsolv.in/p/${savedToken}`}
+                  size={200}
+                  level="H"
+                  marginSize={2}
+                  imageSettings={{ src: '/drsolv-mark.png', height: 40, width: 40, excavate: true }}
+                />
+                <p className="mt-2 text-xs font-bold tracking-wide" style={{ color: NAVY }}>SCAN IN CASE OF EMERGENCY</p>
               </div>
-              <p className="mt-2 text-xs text-slate-400">Scan to open emergency profile</p>
               <button
                 type="button"
-                onClick={() => {
-                  const canvas = document.getElementById('enroll-qr') as HTMLCanvasElement | null;
-                  if (!canvas) return;
-                  const link = document.createElement('a');
-                  link.download = `drsolv-qr-${savedToken}.png`;
-                  link.href = canvas.toDataURL('image/png');
-                  link.click();
-                }}
+                onClick={() => downloadBrandedQR(savedToken)}
                 className="mt-3 rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:border-[#6991d6]"
               >
                 Download QR
