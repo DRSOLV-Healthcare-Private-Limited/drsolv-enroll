@@ -7,28 +7,52 @@ import { COMMON_ALLERGIES, COMMON_MEDICATIONS, COMMON_CONDITIONS } from './commo
 import { QRCodeCanvas } from 'qrcode.react';
 
 const NAVY = '#0a2540';
-function downloadBrandedQR(token: string) {
-  const src = document.getElementById('enroll-qr') as HTMLCanvasElement | null;
-  if (!src) return;
+
+// Composes QR + caption into one PNG, then saves via the mobile share sheet
+// when available (iOS/Android), falling back to a download link on desktop.
+async function downloadBrandedQR(token: string) {
+  const srcEl = document.getElementById('enroll-qr') as HTMLCanvasElement | null;
+  if (!srcEl) return;
   const pad = 40;
   const captionH = 56;
   const out = document.createElement('canvas');
-  out.width = src.width + pad * 2;
-  out.height = src.height + pad * 2 + captionH;
+  out.width = srcEl.width + pad * 2;
+  out.height = srcEl.height + pad * 2 + captionH;
   const ctx = out.getContext('2d');
   if (!ctx) return;
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, out.width, out.height);
-  ctx.drawImage(src, pad, pad);
+  ctx.drawImage(srcEl, pad, pad);
   ctx.fillStyle = NAVY;
   ctx.font = '700 22px -apple-system, Segoe UI, Roboto, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('SCAN IN CASE OF EMERGENCY', out.width / 2, src.height + pad + 38);
+  ctx.fillText('SCAN IN CASE OF EMERGENCY', out.width / 2, srcEl.height + pad + 38);
+
+  const fileName = `drsolv-qr-${token}.png`;
+  const blob: Blob | null = await new Promise((resolve) => out.toBlob((b) => resolve(b), 'image/png'));
+  if (!blob) return;
+
+  // Mobile: hand the image to the native share/save sheet
+  const file = new File([blob], fileName, { type: 'image/png' });
+  const nav = navigator as any;
+  if (nav.canShare && nav.canShare({ files: [file] })) {
+    try {
+      await nav.share({ files: [file], title: 'DRSOLV Emergency QR' });
+      return;
+    } catch {
+      // cancelled or failed — fall through to download
+    }
+  }
+
+  // Desktop / fallback: object-URL download
+  const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.download = `drsolv-qr-${token}.png`;
-  link.href = out.toDataURL('image/png');
+  link.download = fileName;
+  link.href = url;
   link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
+
 // Common quick-pick options (DRAFT — pending Dr. Rashi's review, like the medical lists).
 const COMMON_LANGUAGES = ['Hindi', 'English', 'Bengali', 'Marathi', 'Tamil', 'Telugu', 'Gujarati', 'Kannada', 'Malayalam', 'Punjabi', 'Odia', 'Urdu', 'Assamese'];
 const COMMON_COMPLAINTS = ['None', 'Fever', 'Cough / cold', 'Headache', 'Body ache', 'Injury / trauma', 'Abdominal pain', 'Breathing difficulty', 'Dizziness / weakness'];
@@ -157,7 +181,7 @@ function EnrollForm({ stationId, token, onLogout }: { stationId: string; token: 
           <p className="mt-1 break-all rounded-xl bg-white/50 border border-white/60 p-3 text-xs text-slate-600">{savedId}</p>
           {savedToken && (
             <div className="mt-5 flex flex-col items-center">
-              <div className="rounded-2xl bg-white p-4 shadow border border-slate-100 text-center flex flex-col items-center">
+              <div className="rounded-2xl bg-white p-4 shadow border border-slate-100 flex flex-col items-center">
                 <QRCodeCanvas
                   id="enroll-qr"
                   value={`https://drsolv.in/p/${savedToken}`}
@@ -173,7 +197,7 @@ function EnrollForm({ stationId, token, onLogout }: { stationId: string; token: 
                 onClick={() => downloadBrandedQR(savedToken)}
                 className="mt-3 rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:border-[#6991d6]"
               >
-                Download QR
+                Save / Share QR
               </button>
             </div>
           )}
@@ -418,6 +442,7 @@ function PhotoCapture({ photoUrl, onCapture, onClear }: {
 }) {
   const [cameraOn, setCameraOn] = useState(false);
   const [camError, setCamError] = useState('');
+  const [facing, setFacing] = useState<'user' | 'environment'>('environment');
   const videoRef = React.useRef<HTMLVideoElement | null>(null);
   const streamRef = React.useRef<MediaStream | null>(null);
   const fileRef = React.useRef<HTMLInputElement | null>(null);
@@ -435,15 +460,28 @@ function PhotoCapture({ photoUrl, onCapture, onClear }: {
     setCameraOn(false);
   }
 
-  async function startCamera() {
+  async function openCamera(mode: 'user' | 'environment') {
     setCamError('');
+    // stop any existing stream before switching
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode } });
       streamRef.current = stream;
+      setFacing(mode);
       setCameraOn(true);
+      // if already showing, rebind immediately
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(() => {});
+      }
     } catch {
       setCamError('Camera unavailable. Use Upload photo instead.');
     }
+  }
+
+  function flipCamera() {
+    openCamera(facing === 'user' ? 'environment' : 'user');
   }
 
   function capture() {
@@ -474,12 +512,13 @@ function PhotoCapture({ photoUrl, onCapture, onClear }: {
           <video ref={videoRef} autoPlay playsInline muted className="w-full max-w-xs rounded-2xl bg-black aspect-video object-cover shadow-lg" />
           <div className="flex gap-2">
             <button type="button" onClick={capture} className="rounded-xl bg-[#0a2540] px-4 py-2 text-sm font-medium text-white shadow">Capture</button>
+            <button type="button" onClick={flipCamera} className={glassBtn}>Flip camera ({facing === 'user' ? 'front' : 'back'})</button>
             <button type="button" onClick={stopCamera} className={glassBtn}>Cancel</button>
           </div>
         </div>
       ) : (
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={startCamera} className={glassBtn}><span dangerouslySetInnerHTML={{ __html: '&#128247; ' }} />Use camera</button>
+          <button type="button" onClick={() => openCamera('environment')} className={glassBtn}><span dangerouslySetInnerHTML={{ __html: '&#128247; ' }} />Use camera</button>
           <button type="button" onClick={() => fileRef.current?.click()} className={glassBtn}>Upload photo</button>
           <input ref={fileRef} type="file" accept="image/*" onChange={onFile} className="hidden" />
           {camError && <p className="w-full text-xs text-amber-600">{camError}</p>}
