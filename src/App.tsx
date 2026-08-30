@@ -46,6 +46,7 @@ const emptyForm: EnrollmentForm = {
     noKnownMedications: false, medications: '',
     surgeries: '', drugTreatment: '',
     smoking: '', alcohol: '', diet: '', sleep: '', menstrual: '',
+    lastMenstrualPeriod: '', cycleDays: '',
   },
   termsAccepted: false,
 };
@@ -233,7 +234,11 @@ function EnrollForm({ stationId, token, onLogout }: { stationId: string; token: 
           <Field label="Diet" span={12}><Choice value={mh.diet} onChange={(v) => setMH('diet', v)} options={[['veg', 'Veg'], ['nonveg', 'Non-veg'], ['egg', 'Egg']]} /></Field>
           <Field label="Sleep habits" span={12}><Choice value={mh.sleep} onChange={(v) => setMH('sleep', v)} options={[['adequate', 'Adequate'], ['disturbed', 'Disturbed'], ['insomnia', 'Insomnia']]} /></Field>
           {f.gender === 'female' && (
-            <Field label="Menstrual history" span={12}><Choice value={mh.menstrual} onChange={(v) => setMH('menstrual', v)} options={[['regular', 'Regular'], ['irregular', 'Irregular']]} /></Field>
+            <>
+              <Field label="Last menstrual period" span={6}><input type="date" className={inputCls} value={mh.lastMenstrualPeriod} onChange={(e) => setMH('lastMenstrualPeriod', e.target.value)} /></Field>
+              <Field label="Cycle length (days)" span={6}><input inputMode="numeric" className={inputCls} value={mh.cycleDays} onChange={(e) => setMH('cycleDays', e.target.value)} placeholder="28" /></Field>
+              <Field label="Menstrual cycle" span={12}><Choice value={mh.menstrual} onChange={(v) => setMH('menstrual', v)} options={[['regular', 'Regular'], ['irregular', 'Irregular']]} /></Field>
+            </>
           )}
         </Section>
 

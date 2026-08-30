@@ -23,7 +23,9 @@ export interface MedicalHistory {
   alcohol: string;               // 'yes' | 'no' | ''
   diet: string;                  // 'veg' | 'nonveg' | 'egg' | ''
   sleep: string;                 // 'adequate' | 'disturbed' | 'insomnia' | ''
-  menstrual: string;             // 'regular' | 'irregular' | '' (female only)
+  menstrual: string;
+  lastMenstrualPeriod: string;
+  cycleDays: string;             // 'regular' | 'irregular' | '' (female only)
 }
 
 export interface EnrollmentForm {
