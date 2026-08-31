@@ -69,7 +69,8 @@ const emptyForm: EnrollmentForm = {
     noKnownConditions: false, conditions: '',
     noKnownMedications: false, medications: '',
     surgeries: '', drugTreatment: '',
-    smoking: '', alcohol: '', diet: '', sleep: '', menstrual: '', cycleDays: '',
+    smoking: '', alcohol: '', diet: '', sleep: '', menstrual: '',
+    cycleDays: '',
   },
   termsAccepted: false,
 };
@@ -258,16 +259,14 @@ function EnrollForm({ stationId, token, onLogout }: { stationId: string; token: 
           <Field label="Sleep habits" span={12}><Choice value={mh.sleep} onChange={(v) => setMH('sleep', v)} options={[['adequate', 'Adequate'], ['disturbed', 'Disturbed'], ['insomnia', 'Insomnia']]} /></Field>
           {f.gender === 'female' && (
             <>
-              <Field label="Menstrual cycle" span={12}><Choice value={mh.menstrual} onChange={(v) => setMH('menstrual', v)} options={[['regular', 'Regular'], ['irregular', 'Irregular']]} /></Field>
+              <Field label="Cycle length (days)" span={6}><input inputMode="numeric" className={inputCls} value={mh.cycleDays} onChange={(e) => setMH('cycleDays', e.target.value)} placeholder="28" /></Field>
+              <Field label="Menstrual cycle" span={6}><Choice value={mh.menstrual} onChange={(v) => setMH('menstrual', v)} options={[['regular', 'Regular'], ['irregular', 'Irregular']]} /></Field>
             </>
           )}
         </Section>
 
         <div className="lg:col-span-2 space-y-4 drsolv-rise" style={{ animationDelay: '240ms' }}>
-          <label className={glassCard + ' flex items-start gap-3 p-5 text-sm text-slate-700'}>
-            <input type="checkbox" checked={f.termsAccepted} onChange={(e) => set('termsAccepted', e.target.checked)} className="mt-0.5 h-5 w-5 accent-[#0a2540]" />
-            <span>Student has given consent for this data (including a photo) to be collected and shown on their emergency profile.</span>
-          </label>
+          <ConsentBlock accepted={f.termsAccepted} onChange={(v) => set('termsAccepted', v)} />
 
           {!otpSent ? (
             <>
@@ -346,6 +345,49 @@ function Field({ label, span = 12, children }: { label: string; span?: number; c
       <span className="mb-1.5 block text-sm font-medium text-slate-600">{label}</span>
       {children}
     </label>
+  );
+}
+
+// Full consent text, filled with DRSOLV details. DRAFT — pending legal review.
+const CONSENT_PARAGRAPHS: [string, string][] = [
+  ['1. Who we are', 'This service is operated by DRSOLV Healthcare Private Limited ("DRSOLV", "we"), registered at D-1603, Fusion Homes, Tech Zone-4, Gautam Buddha Nagar, Uttar Pradesh 201318, contactable at solvpvtltd@gmail.com / 8077801054.'],
+  ['2. What we collect', 'With your consent, we collect and store: your name, photograph, date of birth, gender, blood group, phone number, spoken languages, height and weight, emergency contact details, and the health information you provide — including allergies, medical conditions, medications, past surgeries, ongoing treatment, lifestyle information (smoking, alcohol, diet, sleep), and, if applicable, menstrual health information. Some of this is sensitive personal data (health data), which we process only with your explicit consent.'],
+  ['3. Why we collect it and how it is used', 'The purpose is to make critical medical information available in an emergency. Your information is linked to a QR code you carry. When scanned: anyone (a bystander or first responder) can see a limited set of details — your photo, name, age, gender, blood group, and a means to contact your emergency contact — so they can help you. Your detailed medical information is shown only to a healthcare professional, and only after a one-time code sent to your own phone is used to authorise that access. This means your detailed data is not visible to the general public.'],
+  ['4. Access notifications and records', 'When a healthcare professional accesses your detailed information, we record that access (who requested it and when) and may notify you.'],
+  ['5. Consent to process sensitive (health) data', 'You expressly consent to DRSOLV collecting, storing, and processing your health data for the purpose described above. You understand this data is sensitive and consent to it being shown to verified healthcare professionals in an emergency context.'],
+  ['6. Storage and security', 'Your data is stored securely on servers located in the Mumbai region (India), with reasonable technical and organisational measures to protect it.'],
+  ['7. Retention and deletion', 'This is a pilot program. If the program is discontinued, your data will be deleted. You may also request deletion of your data at any time (see your rights below).'],
+  ['8. Your rights', 'You have the right to: access the personal data we hold about you; request correction of inaccurate data; withdraw your consent and request deletion of your data; and raise a grievance. To exercise any of these, contact dpnsu999@gmail.com. Withdrawing consent will result in your profile being deactivated and deleted.'],
+  ['9. No obligation', 'Providing this information is voluntary. You may choose not to enroll, and you may withdraw at any time without penalty.'],
+  ['10. Confirmation', 'I confirm that: I am 18 years of age or older; the information I have provided is accurate to the best of my knowledge; I have read and understood this consent; and I voluntarily agree to DRSOLV collecting and processing my data, including my sensitive health data, as described.'],
+];
+
+function ConsentBlock({ accepted, onChange }: { accepted: boolean; onChange: (v: boolean) => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={glassCard + ' p-5'}>
+      <label className="flex items-start gap-3 text-sm text-slate-700">
+        <input type="checkbox" checked={accepted} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 h-5 w-5 accent-[#0a2540]" />
+        <span>
+          The student has read and agreed to the{' '}
+          <button type="button" onClick={(e) => { e.preventDefault(); setOpen((o) => !o); }} className="font-semibold underline" style={{ color: NAVY }}>
+            DRSOLV data consent terms
+          </button>
+          , including collection of a photo and health data shown on their emergency profile.
+        </span>
+      </label>
+      {open && (
+        <div className="mt-4 max-h-72 overflow-y-auto rounded-xl border border-white/60 bg-white/70 p-4 text-xs leading-relaxed text-slate-700 space-y-3">
+          <p className="font-bold text-sm" style={{ color: NAVY }}>DRSOLV Emergency Medical Profile — Consent to Collect and Process Personal and Health Data</p>
+          {CONSENT_PARAGRAPHS.map(([h, body]) => (
+            <div key={h}>
+              <p className="font-semibold" style={{ color: NAVY }}>{h}</p>
+              <p>{body}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
